@@ -82,16 +82,19 @@ class Pattern(object):
     def sphere(self, size):
         origin = (3.5, 3.5, 3.5)
         black = (0.0, 0.0, 0.0)
-        white = (1.0, 1.0, 1.0)
-        pulsing = self.get_pulsing_color()
-        # color = self.get_pulsing_color()
-        # color = white
+        red = (1.0, 0.0, 0.0)
+
         print size
         # size = 3.0
 
         # radius = ((0.1 * size) ** 0.4) * 70 # vaguely based on the inverse equation for the volume of a sphere
-        radius = self.get_sphere_radius(size) * 6.0
-        print radius
+        radius = self.get_sphere_radius(size)
+        upscaled = radius * self.cube.size*0.75
+        print upscaled
+
+        pulsing = self.get_pulsing_color() # get a breathing effect
+        # as the size of the sphere increases, fade the breathing towards a red colour
+        blended = cubehelper.mix_color(pulsing, red, radius)
 
         for y in range(0, self.cube.size):
             for x in range(0, self.cube.size):
@@ -99,8 +102,8 @@ class Pattern(object):
                     dist = self.distance(origin, (x, y, z))
                     # print (x, y, z), dist, size
 
-                    if dist < radius:
-                        color = pulsing
+                    if dist < upscaled:
+                        color = blended
                     else:
                         color = black
 
