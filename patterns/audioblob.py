@@ -77,7 +77,7 @@ class Pattern(object):
     def get_sphere_radius(self, volume):
         """Get an approximation of the radius of a sphere, given the volume"""
         multiplier = 0.083 # ~1/12
-        return (multiplier * volume) ** 0.333
+        return (multiplier * volume) ** 0.5
 
     def sphere(self, size):
         origin = (3.5, 3.5, 3.5)
@@ -90,7 +90,7 @@ class Pattern(object):
         # size = 3.0
 
         # radius = ((0.1 * size) ** 0.4) * 70 # vaguely based on the inverse equation for the volume of a sphere
-        radius = self.get_sphere_radius(size) * 5
+        radius = self.get_sphere_radius(size) * 6.0
         print radius
 
         for y in range(0, self.cube.size):
