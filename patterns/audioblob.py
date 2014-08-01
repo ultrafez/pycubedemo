@@ -24,6 +24,7 @@ class Pattern(object):
         self.min_amplitude = 0
         self.max_amplitude = 17000
         self.amplitude_diff = 17000
+        self.tick_counter = 0
 
         pa = pyaudio.PyAudio()
         self.stream = pa.open(format = FORMAT,
@@ -40,22 +41,72 @@ class Pattern(object):
         return (None, pyaudio.paContinue)
 
     def tick(self):
+        self.tick_counter += 1
         if self.current_audio:
             amplitude = audioop.rms(self.current_audio, 2)
-            print amplitude
+            # print amplitude
             self.history.append(amplitude)
             size = max(0, (amplitude - self.min_amplitude) / float(self.amplitude_diff))
             self.draw(math.floor(size * self.cube.size))
 
         if len(self.history) > 16:
-            # print "updating"
+            print "updating"
             self.min_amplitude = min(self.history)
             self.amplitude_diff = self.max_amplitude - self.min_amplitude
             self.history = []
 
     def draw(self, size):
-        for coord in cubehelper.line((0, 0, 0), (7, 0, 0)):
-            self.cube.set_pixel(coord, (0, 0, 0))
+        # print size
+        # for coord in cubehelper.line((0, 0, 0), (7, 0, 0)):
+            # self.cube.set_pixel(coord, (0, 0, 0))
 
-        for coord in cubehelper.line((0, 0, 0), (size, 0, 0)):
-            self.cube.set_pixel(coord, (1.0, 1.0, 1.0))
+        # for coord in cubehelper.line((0, 0, 0), (size, 0, 0)):
+            # self.cube.set_pixel(coord, (1.0, 1.0, 1.0))
+
+        size = max(1.0, size)
+        self.sphere(size)
+
+    def get_pulsing_color(self):
+        meld = math.sin(self.tick_counter / 10.0)
+        # color1 = (1.0, 0.0, 0.0)
+        color1 = cubehelper.color_to_float(0x006AFF)
+        color2 = cubehelper.color_to_float(0x003580)
+        # color2 = (0.0, 0.0, 1.0)
+        return cubehelper.mix_color(color1, color2, (meld / 2.0) + 0.5)
+
+    def get_sphere_radius(self, volume):
+        """Get an approximation of the radius of a sphere, given the volume"""
+        multiplier = 0.083 # ~1/12
+        return (multiplier * volume) ** 0.333
+
+    def sphere(self, size):
+        origin = (3.5, 3.5, 3.5)
+        black = (0.0, 0.0, 0.0)
+        white = (1.0, 1.0, 1.0)
+        pulsing = self.get_pulsing_color()
+        # color = self.get_pulsing_color()
+        # color = white
+        print size
+        # size = 3.0
+
+        # radius = ((0.1 * size) ** 0.4) * 70 # vaguely based on the inverse equation for the volume of a sphere
+        radius = self.get_sphere_radius(size) * 5
+        print radius
+
+        for y in range(0, self.cube.size):
+            for x in range(0, self.cube.size):
+                for z in range(0, self.cube.size):
+                    dist = self.distance(origin, (x, y, z))
+                    # print (x, y, z), dist, size
+
+                    if dist < radius:
+                        color = pulsing
+                    else:
+                        color = black
+
+                    self.cube.set_pixel((x, y, z), color)
+
+
+    def distance(self, c1, c2):
+        diff = (c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2])
+        return math.sqrt(diff[0]**2 + diff[1]**2 + diff[2]**2)
