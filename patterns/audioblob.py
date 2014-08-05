@@ -22,9 +22,10 @@ class Pattern(object):
         self.current_audio = None
         self.history = []
         self.min_amplitude = 0
-        self.max_amplitude = 17000
+        self.max_amplitude = 16000
         self.amplitude_diff = 17000
         self.tick_counter = 0
+        self.current_size = 1
 
         pa = pyaudio.PyAudio()
         self.stream = pa.open(format = FORMAT,
@@ -44,28 +45,48 @@ class Pattern(object):
         self.tick_counter += 1
         if self.current_audio:
             amplitude = audioop.rms(self.current_audio, 2)
-            # print amplitude
+            print amplitude
             self.history.append(amplitude)
-            size = max(0, (amplitude - self.min_amplitude) / float(self.amplitude_diff))
-            self.draw(math.floor(size * self.cube.size))
+            new_size = max(0, (amplitude - self.min_amplitude) / float(self.amplitude_diff))
+            new_size = new_size * new_size
+            diff = new_size - self.current_size
+            if diff < -0.25:
+                diff = -0.25
+            elif diff > 0.5:
+                diff = 0.5
+
+            self.current_size += diff
+            self.draw(math.floor(self.current_size * self.cube.size))
 
         if len(self.history) > 16:
-            print "updating"
             self.min_amplitude = min(self.history)
+            # self.max_amplitude = max(max(self.history)*1.08, self.max_amplitude)
             self.amplitude_diff = self.max_amplitude - self.min_amplitude
+            print "updating min " + str(self.min_amplitude) + " max " + str(self.max_amplitude)
             self.history = []
 
     def draw(self, size):
-        size = max(1.0, size)
+        size = max(0.5, size)
         self.sphere(size)
 
     def get_pulsing_color(self):
-        meld = math.sin(self.tick_counter / 10.0)
+        meld = math.sin(self.tick_counter / 5.0)
         # color1 = (1.0, 0.0, 0.0)
-        color1 = cubehelper.color_to_float(0x006AFF)
-        color2 = cubehelper.color_to_float(0x003580)
+        color1 = cubehelper.color_to_float(0x00FF00)
+        color2 = cubehelper.color_to_float(0x0000FF)
         # color2 = (0.0, 0.0, 1.0)
         return cubehelper.mix_color(color1, color2, (meld / 2.0) + 0.5)
+
+    def vu_color(self, amount):
+        """Return a VU meter colour from green to red, with amount between 0 and 1"""
+        green = cubehelper.color_to_float(0x00FF00)
+        yellow = cubehelper.color_to_float(0xFFFF00)
+        red = cubehelper.color_to_float(0xFF0000)
+
+        if amount<0.5:
+            return cubehelper.mix_color(green, yellow, amount/0.5)
+        else:
+            return cubehelper.mix_color(yellow, red, min(1.0, (amount-0.5)/0.4))
 
     def get_sphere_radius(self, volume):
         """Get an approximation of the radius of a sphere, given the volume"""
@@ -77,16 +98,17 @@ class Pattern(object):
         black = (0.0, 0.0, 0.0)
         red = (1.0, 0.0, 0.0)
 
-        print size
+        # print size
         # size = 3.0
 
         # radius = ((0.1 * size) ** 0.4) * 70 # vaguely based on the inverse equation for the volume of a sphere
         radius = self.get_sphere_radius(size)
-        upscaled = radius * self.cube.size*0.75
-        print upscaled
+        upscaled = radius * self.cube.size*0.7
+        # print upscaled
 
         pulsing = self.get_pulsing_color() # get a breathing effect
         # as the size of the sphere increases, fade the breathing towards a red colour
+        radius = min(radius, 1.0)
         blended = cubehelper.mix_color(pulsing, red, radius)
 
         for y in range(0, self.cube.size):
@@ -96,7 +118,8 @@ class Pattern(object):
                     # print (x, y, z), dist, size
 
                     if dist < upscaled:
-                        color = blended
+                        # color = cubehelper.mix_color(pulsing, red, min(dist/4.0, 1.0))
+                        color = self.vu_color(min(dist/4.0, 1.0))
                     else:
                         color = black
 
