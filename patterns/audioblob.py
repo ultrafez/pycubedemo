@@ -56,13 +56,6 @@ class Pattern(object):
             self.history = []
 
     def draw(self, size):
-        # print size
-        # for coord in cubehelper.line((0, 0, 0), (7, 0, 0)):
-            # self.cube.set_pixel(coord, (0, 0, 0))
-
-        # for coord in cubehelper.line((0, 0, 0), (size, 0, 0)):
-            # self.cube.set_pixel(coord, (1.0, 1.0, 1.0))
-
         size = max(1.0, size)
         self.sphere(size)
 
