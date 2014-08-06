@@ -8,6 +8,7 @@ import struct
 import numpy
 import math
 import audioop
+import collections
 
 FORMAT = pyaudio.paFloat32
 SHORT_NORMALIZE = (1.0/32768.0)
@@ -20,10 +21,12 @@ class Pattern(object):
     def init(self):
         self.double_buffer = True
         self.current_audio = None
-        self.history = []
+        self.sample_history = []
+        self.plane_history = collections.deque() # previous spectrum planes displayed
         self.min_amplitude = 0
         self.max_amplitude = 16000
         self.amplitude_diff = 16000
+        self.black = (0.0, 0.0, 0.0)
 
         pa = pyaudio.PyAudio()
         self.stream = pa.open(format = FORMAT,
@@ -33,41 +36,38 @@ class Pattern(object):
                       frames_per_buffer = INPUT_FRAMES_PER_BLOCK,
                       stream_callback = self.incoming_audio)
 
-        return 0.5 / self.cube.size
+        return 0.2 / self.cube.size
 
     def incoming_audio(self, in_data, frame_count, time_info, status_flags):
         self.current_audio = in_data
         return (None, pyaudio.paContinue)
 
     def tick(self):
-        self.cube.clear()
+        # self.cube.clear()
         if self.current_audio:
             amplitude = audioop.rms(self.current_audio, 2)
             # print amplitude
-            self.history.append(amplitude)
+            self.sample_history.append(amplitude)
             
             self.draw()
 
-        if len(self.history) > 16:
-            self.min_amplitude = min(self.history)
-            # self.max_amplitude = max(max(self.history)*1.08, self.max_amplitude)
+        if len(self.sample_history) > 16:
+            self.min_amplitude = min(self.sample_history)
+            # self.max_amplitude = max(max(self.sample_history)*1.08, self.max_amplitude)
             self.amplitude_diff = self.max_amplitude - self.min_amplitude
             print "updating min " + str(self.min_amplitude) + " max " + str(self.max_amplitude)
-            self.history = []
+            self.sample_history = []
 
     def draw(self):
         levels = self.calculate_levels(self.current_audio)
-        print levels
+        levels_plane = self.levels_to_plane(levels)
+        self.plane_history.appendleft(levels_plane)
 
-        color = cubehelper.color_to_float(0xFFFFFF)
+        if len(self.plane_history) > 8:
+            self.plane_history.pop()
 
-        transformed = self.transform_on(levels)
-        for y in range(0, self.cube.size):
-            for x in range(0, self.cube.size):
-                if transformed[x][y] == 1:
-                    self.cube.set_pixel((x, 0, y), color)
-
-
+        for index, plane in enumerate(self.plane_history):
+            self.draw_plane(plane, index)
 
     def calculate_levels(self, data):
         fft_block_size = INPUT_FRAMES_PER_BLOCK/16
@@ -103,22 +103,28 @@ class Pattern(object):
         matrix = [min(x, 8) for x in matrix]
         return matrix
 
-    def transform_on(self, levels):
+    def levels_to_plane(self, levels):
         matrix = [[0 for x in range(0, len(levels))] for x in range(0, len(levels))]
 
         for x in range(0, len(levels)):
             for height in range(0, levels[x]):
-                matrix[x][self.cube.size-height-1] = 1
+                matrix[x][height] = 1
 
         return matrix
 
-    def vu_color(self, amount):
-        """Return a VU meter colour from green to red, with amount between 0 and 1"""
-        green = cubehelper.color_to_float(0x00FF00)
-        yellow = cubehelper.color_to_float(0xFFFF00)
-        red = cubehelper.color_to_float(0xFF0000)
+    def draw_plane(self, plane, distance):
+        """Draw the contents of the specified plane in the XZ axis, <distance> pixels from the front of the cube"""
+        for x in range(0, len(plane)):
+            for z in range(0, len(plane[x])):
+                if plane[x][z] == 1:
+                    self.cube.set_pixel((x, distance, z), self.vu_color(z))
+                else:
+                    self.cube.set_pixel((x, distance, z), self.black)
 
-        if amount<0.5:
-            return cubehelper.mix_color(green, yellow, amount/0.5)
+    def vu_color(self, value):
+        if value <= 3:
+            return (0.0, 1.0, 0.0)
+        elif value <= 5:
+            return (1.0, 1.0, 0.0)
         else:
-            return cubehelper.mix_color(yellow, red, min(1.0, (amount-0.5)/0.4))
+            return (1.0, 0.0, 0.0)
