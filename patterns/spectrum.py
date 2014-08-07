@@ -28,6 +28,9 @@ class Pattern(object):
         self.amplitude_diff = 16000
         self.black = (0.0, 0.0, 0.0)
 
+        if self.cube.size != 8:
+            print "This pattern is unlikely to work properly (if at all) on cubes that aren't 8x8x8"
+
         pa = pyaudio.PyAudio()
         self.stream = pa.open(format = FORMAT,
                       channels = CHANNELS,
@@ -117,14 +120,20 @@ class Pattern(object):
         for x in range(0, len(plane)):
             for z in range(0, len(plane[x])):
                 if plane[x][z] == 1:
-                    self.cube.set_pixel((x, distance, z), self.vu_color(z))
+                    self.cube.set_pixel((x, distance, z), self.vu_color(z, distance))
                 else:
                     self.cube.set_pixel((x, distance, z), self.black)
 
-    def vu_color(self, value):
+    def vu_color(self, value, distance):
+        """Return a green/yellow/red VU meter colour based on the value (between 0 and 7 inclusive). Higher distances fade the colour out"""
         if value <= 3:
-            return (0.0, 1.0, 0.0)
+            base_color = (0.0, 1.0, 0.0)
         elif value <= 5:
-            return (1.0, 1.0, 0.0)
+            base_color = (1.0, 1.0, 0.0)
         else:
-            return (1.0, 0.0, 0.0)
+            base_color = (1.0, 0.0, 0.0)
+
+        if distance == 0:
+            return base_color
+        else:
+            return cubehelper.mix_color(base_color, self.black, (distance/10.0)+0.2)
