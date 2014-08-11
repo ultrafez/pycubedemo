@@ -19,6 +19,7 @@ INPUT_FRAMES_PER_BLOCK = 512
 
 class Pattern(object):
     def init(self):
+        self.tick_counter = 0
         self.double_buffer = True
         self.current_audio = None
         self.sample_history = []
@@ -46,6 +47,8 @@ class Pattern(object):
         return (None, pyaudio.paContinue)
 
     def tick(self):
+        self.tick_counter += 1
+
         # self.cube.clear()
         if self.current_audio:
             amplitude = audioop.rms(self.current_audio, 2)
@@ -64,6 +67,8 @@ class Pattern(object):
     def draw(self):
         levels = self.calculate_levels(self.current_audio)
         levels_plane = self.levels_to_plane(levels)
+
+        # if self.tick_counter % 8 == 0:
         self.plane_history.appendleft(levels_plane)
 
         if len(self.plane_history) > 8:
@@ -71,6 +76,8 @@ class Pattern(object):
 
         for index, plane in enumerate(self.plane_history):
             self.draw_plane(plane, index)
+
+        # self.draw_plane(levels_plane, 0)
 
     def calculate_levels(self, data):
         fft_block_size = INPUT_FRAMES_PER_BLOCK/16
