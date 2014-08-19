@@ -19,7 +19,6 @@ INPUT_FRAMES_PER_BLOCK = 512
 
 class Pattern(object):
     def init(self):
-        self.tick_counter = 0
         self.double_buffer = True
         self.current_audio = None
         self.sample_history = []
@@ -47,12 +46,9 @@ class Pattern(object):
         return (None, pyaudio.paContinue)
 
     def tick(self):
-        self.tick_counter += 1
-
         # self.cube.clear()
         if self.current_audio:
             amplitude = audioop.rms(self.current_audio, 2)
-            # print amplitude
             self.sample_history.append(amplitude)
             
             self.draw()
@@ -68,7 +64,6 @@ class Pattern(object):
         levels = self.calculate_levels(self.current_audio)
         levels_plane = self.levels_to_plane(levels)
 
-        # if self.tick_counter % 8 == 0:
         self.plane_history.appendleft(levels_plane)
 
         if len(self.plane_history) > 8:
@@ -77,37 +72,25 @@ class Pattern(object):
         for index, plane in enumerate(self.plane_history):
             self.draw_plane(plane, index)
 
-        # self.draw_plane(levels_plane, 0)
-
     def calculate_levels(self, data):
         fft_block_size = INPUT_FRAMES_PER_BLOCK/16
         data = numpy.fromstring(data, 'Float32')
-        print data
-        data = numpy.reshape(data, (fft_block_size, 16))
-        data = numpy.average(data, axis=1)
-        print data
-        
-        # return
-        # print data
-        # return
-        # Convert raw data to numpy array
-        # data = struct.unpack("%dh"%(len(data)/2),data)
-        # data = numpy.array(data, dtype='h')
-        # print data
+        data = numpy.reshape(data, (fft_block_size, 16)) # resulting array is fft_block_size rows, 16 cols
+        data = numpy.average(data, axis=1) # now data is fft_block_size long. axis=1 averages all elements of each row
+
         # Apply FFT - real data so rfft used
-        # print len(data)
         fourier=numpy.fft.rfft(data)
-        # print fourier
+
         # Remove last element in array to make it the same size as chunk
         fourier=numpy.delete(fourier,len(fourier)-1)
-        # print fourier
+
         # Find amplitude
-        # power = numpy.log10(numpy.abs(fourier))**2
         power = numpy.abs(fourier)
-        # print power
-        # print len(power)
-        # Araange array into 8 rows for the 8 bars on LED matrix
+
+        # Arrange array into 8 rows of 2
         power = numpy.reshape(power, (8, fft_block_size/16))
+
+        # Average the rows to return an array of ints representing volumes for frequency bands
         matrix = numpy.int_(numpy.average(power, axis=1)*float(self.cube.size))
 
         matrix = [min(x, 8) for x in matrix]
