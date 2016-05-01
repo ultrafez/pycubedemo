@@ -21,6 +21,9 @@ class Pattern(object):
 
         self.snakes = []
         self.snakes.append(Snake(self.cube, (1.0, 0.0, 0.0), self.TRAIL_LENGTH, corner_leave_directions))
+        self.snakes.append(Snake(self.cube, (0.0, 1.0, 0.0), self.TRAIL_LENGTH, corner_leave_directions))
+        self.snakes.append(Snake(self.cube, (0.0, 0.0, 1.0), self.TRAIL_LENGTH, corner_leave_directions))
+        self.snakes.append(Snake(self.cube, (1.0, 1.0, 0.0), self.TRAIL_LENGTH, corner_leave_directions))
 
         return 1.0 / self.cube.size / 2
 
