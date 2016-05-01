@@ -7,11 +7,6 @@ class Pattern(object):
     TRAIL_LENGTH = 5
 
     def init(self):
-        # self.snake = Snake()
-        self.head = (0, 0, 0)
-        self.trail = deque([], self.TRAIL_LENGTH)
-        self.direction = (1, 0, 0)
-        self.color = (1.0, 0.0, 0.0)
         self.max = self.cube.size-1
 
         # Direction vectors leaving a particular corner vertex
@@ -25,6 +20,12 @@ class Pattern(object):
         self.corner_leave_directions[(m, 0, m)] = [(-1, 0, 0), (0, 1, 0), (0, 0, -1)]
         self.corner_leave_directions[(m, m, 0)] = [(-1, 0, 0), (0, -1, 0), (0, 0, 1)]
         self.corner_leave_directions[(m, m, m)] = [(-1, 0, 0), (0, -1, 0), (0, 0, -1)]
+
+        # self.snake = Snake()
+        self.head = self.corner_leave_directions.keys()[random.randrange(8)]
+        self.trail = deque([], self.TRAIL_LENGTH)
+        self.direction = self.new_direction(self.head, [])
+        self.color = (1.0, 0.0, 0.0)
 
         return 1.0 / self.cube.size / 2
 
