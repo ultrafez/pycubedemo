@@ -9,25 +9,37 @@ class Pattern(object):
     def init(self):
         # Direction vectors leaving a particular corner vertex
         m = self.cube.size-1
-        corner_leave_directions = {}
-        corner_leave_directions[(0, 0, 0)] = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
-        corner_leave_directions[(0, 0, m)] = [(1, 0, 0), (0, 1, 0), (0, 0, -1)]
-        corner_leave_directions[(0, m, 0)] = [(1, 0, 0), (0, -1, 0), (0, 0, 1)]
-        corner_leave_directions[(0, m, m)] = [(1, 0, 0), (0, -1, 0), (0, 0, -1)]
-        corner_leave_directions[(m, 0, 0)] = [(-1, 0, 0), (0, 1, 0), (0, 0, 1)]
-        corner_leave_directions[(m, 0, m)] = [(-1, 0, 0), (0, 1, 0), (0, 0, -1)]
-        corner_leave_directions[(m, m, 0)] = [(-1, 0, 0), (0, -1, 0), (0, 0, 1)]
-        corner_leave_directions[(m, m, m)] = [(-1, 0, 0), (0, -1, 0), (0, 0, -1)]
+        self.corner_leave_directions = {}
+        self.corner_leave_directions[(0, 0, 0)] = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
+        self.corner_leave_directions[(0, 0, m)] = [(1, 0, 0), (0, 1, 0), (0, 0, -1)]
+        self.corner_leave_directions[(0, m, 0)] = [(1, 0, 0), (0, -1, 0), (0, 0, 1)]
+        self.corner_leave_directions[(0, m, m)] = [(1, 0, 0), (0, -1, 0), (0, 0, -1)]
+        self.corner_leave_directions[(m, 0, 0)] = [(-1, 0, 0), (0, 1, 0), (0, 0, 1)]
+        self.corner_leave_directions[(m, 0, m)] = [(-1, 0, 0), (0, 1, 0), (0, 0, -1)]
+        self.corner_leave_directions[(m, m, 0)] = [(-1, 0, 0), (0, -1, 0), (0, 0, 1)]
+        self.corner_leave_directions[(m, m, m)] = [(-1, 0, 0), (0, -1, 0), (0, 0, -1)]
+
+        self.ticks = 0
 
         self.snakes = []
-        self.snakes.append(Snake(self.cube, (1.0, 0.0, 0.0), self.TRAIL_LENGTH, corner_leave_directions))
-        self.snakes.append(Snake(self.cube, (0.0, 1.0, 0.0), self.TRAIL_LENGTH, corner_leave_directions))
-        self.snakes.append(Snake(self.cube, (0.0, 0.0, 1.0), self.TRAIL_LENGTH, corner_leave_directions))
-        self.snakes.append(Snake(self.cube, (1.0, 1.0, 0.0), self.TRAIL_LENGTH, corner_leave_directions))
+        self.snakes.append(Snake(self.cube, (1.0, 0.0, 0.0), self.TRAIL_LENGTH, self.corner_leave_directions))
 
         return 1.0 / self.cube.size / 2
 
     def tick(self):
+        self.ticks += 1
+        if self.ticks == 11:
+            self.snakes.append(Snake(self.cube, (0.0, 1.0, 0.0), self.TRAIL_LENGTH, self.corner_leave_directions))
+
+        if self.ticks == 23:
+            self.snakes.append(Snake(self.cube, (0.0, 0.0, 1.0), self.TRAIL_LENGTH, self.corner_leave_directions))
+            
+        if self.ticks == 38:
+            self.snakes.append(Snake(self.cube, (1.0, 1.0, 0.0), self.TRAIL_LENGTH, self.corner_leave_directions))
+
+        self.draw()
+
+    def draw(self):
         self.cube.clear()
         for snake in self.snakes:
             snake.draw()
