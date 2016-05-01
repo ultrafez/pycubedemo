@@ -41,6 +41,13 @@ class Pattern(object):
 
     def new_direction(self, coord, curr_direction):
         potential_directions = self.corner_leave_directions[coord]
-        next_dir_index = random.randrange(3)
+
+        # Prevent returning along the edge we've just travelled
+        return_direction = tuple(map(lambda x: -x, curr_direction))
+
+        while True:
+            next_dir_index = random.randrange(3)
+            if potential_directions[next_dir_index] != return_direction:
+                break
 
         return potential_directions[next_dir_index]
