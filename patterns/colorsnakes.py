@@ -1,10 +1,11 @@
 import cubehelper
 # import numpy as np
 import random
-from collections import deque
+from collections import deque, defaultdict
+from operator import add
 
 class Pattern(object):
-    TRAIL_LENGTH = 5
+    TRAIL_LENGTH = 7
 
     def init(self):
         # Direction vectors leaving a particular corner vertex
@@ -22,29 +23,46 @@ class Pattern(object):
         self.ticks = 0
 
         self.snakes = []
-        self.snakes.append(Snake(self.cube, (1.0, 0.0, 0.0), self.TRAIL_LENGTH, self.corner_leave_directions))
+        self.snakes.append(Snake(self.cube, [1.0, 0.0, 0.0], self.TRAIL_LENGTH, self.corner_leave_directions))
 
-        return 1.0 / self.cube.size / 2
+        return 1.0 / self.cube.size / 3
 
     def tick(self):
         self.ticks += 1
         if self.ticks == 11:
-            self.snakes.append(Snake(self.cube, (0.0, 1.0, 0.0), self.TRAIL_LENGTH, self.corner_leave_directions))
+            self.snakes.append(Snake(self.cube, [0.0, 1.0, 0.0], self.TRAIL_LENGTH, self.corner_leave_directions))
 
         if self.ticks == 23:
-            self.snakes.append(Snake(self.cube, (0.0, 0.0, 1.0), self.TRAIL_LENGTH, self.corner_leave_directions))
+            self.snakes.append(Snake(self.cube, [0.0, 0.0, 1.0], self.TRAIL_LENGTH, self.corner_leave_directions))
+
+        if self.ticks == 36:
+            self.snakes.append(Snake(self.cube, [1.0, 0.0, 0.0], self.TRAIL_LENGTH, self.corner_leave_directions))
+
+        if self.ticks == 50:
+            self.snakes.append(Snake(self.cube, [0.0, 1.0, 0.0], self.TRAIL_LENGTH, self.corner_leave_directions))
+
+        if self.ticks == 56:
+            self.snakes.append(Snake(self.cube, [0.0, 0.0, 1.0], self.TRAIL_LENGTH, self.corner_leave_directions))
             
-        if self.ticks == 38:
-            self.snakes.append(Snake(self.cube, (1.0, 1.0, 0.0), self.TRAIL_LENGTH, self.corner_leave_directions))
+        # if self.ticks == 38:
+        #     self.snakes.append(Snake(self.cube, [1.0, 1.0, 0.0], self.TRAIL_LENGTH, self.corner_leave_directions))
 
         self.draw()
 
     def draw(self):
         self.cube.clear()
+
+        def get_black():
+            return [0, 0, 0]
+
+        pixels_to_change = defaultdict(get_black)
+
         for snake in self.snakes:
-            snake.draw()
+            snake.draw(pixels_to_change)
             snake.tick()
-        
+
+        for k, v in pixels_to_change.items():
+            self.cube.set_pixel(k, map(min, v, [1.0, 1.0, 1.0])) # ensure the color doesn't exceed white
 
 
 class Snake(object):
@@ -66,11 +84,11 @@ class Snake(object):
         if self.is_corner(self.head):
             self.direction = self.new_direction(self.head, self.direction)
 
-    def draw(self):
-        self.cube.set_pixel(self.head, self.color)
+    def draw(self, pixels_to_change):
+        pixels_to_change[self.head] = map(add, self.color, pixels_to_change[self.head])
 
         for coord in self.trail:
-            self.cube.set_pixel(coord, self.color)
+            pixels_to_change[coord] = map(add, self.color, pixels_to_change[coord])
 
     def is_corner(self, coord):
         return coord in self.corner_leave_directions
