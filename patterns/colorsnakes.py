@@ -8,6 +8,8 @@ class Pattern(object):
     TRAIL_LENGTH = 7
 
     def init(self):
+        self.double_buffer = True
+        
         # Direction vectors leaving a particular corner vertex
         m = self.cube.size-1
         self.corner_leave_directions = {}
