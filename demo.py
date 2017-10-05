@@ -20,7 +20,7 @@ pattern_details = [
     # name, args, duration
     ('plasma', '', 60.0),
     ('pause', '', 0.5),
-    ('demomusicstartmute', '', 2.217370),
+    ('demomusicstart', '', 2.217370),
     ('boxflip', '', TEMPO),
     ('cubezoom','',TEMPO),
     ('cubefill','',TEMPO),

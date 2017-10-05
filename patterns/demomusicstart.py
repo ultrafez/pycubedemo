@@ -32,5 +32,5 @@ class Pattern(object):
 			self.isaac.play()
 			self.sleepyplayed = True
 		self.timer += DT
-                raise StopIteration
+		raise StopIteration
 
