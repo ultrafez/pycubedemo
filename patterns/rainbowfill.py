@@ -181,6 +181,7 @@ class Pattern(object):
 			self.anim_counter += 1
 			
 			if self.anim_counter == FADE_ANIM_LENGTH - 1:
+				raise StopIteration
 				self.state = self.MOVE
 				self.move_sound.play()
 				self.anim_counter = 0

@@ -71,3 +71,5 @@ class Pattern(object):
         if (math.sin(self.sinwidth*self.iter)+1)/2 < 0.1:
             self.prevColor = self.color
             self.color = cubehelper.random_color()
+
+        raise StopIteration
