@@ -33,8 +33,8 @@ pattern_details = [
     ('fade','',TEMPO + 4.0),
     ('pause','', 6.0),
     ('rainbowfill', '', 60.0),
-    ('pause','', 6.0),
-    ('life', '', 30.0),
+    # ('pause','', 6.0),
+    # ('life', '', 30.0),
     ('pause','', 6.0),
     ('weathermatt','', 160.0),
 ]
