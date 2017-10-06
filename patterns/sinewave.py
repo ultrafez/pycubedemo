@@ -55,7 +55,7 @@ class Pattern(object):
         self.color = cubehelper.random_color()
         self.prevColor = cubehelper.random_color()
         
-        return 1.0/15
+        return 1.0/16
 
     def tick(self):
         self.cube.clear()
