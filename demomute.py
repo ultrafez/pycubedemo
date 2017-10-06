@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-c Framework for running LED cube demos
+# Framework for running LED cube demos
 # Copyright (C) Paul Brook <paul@nowt.org>
 # Released under the terms of the GNU General Public License version 3
 
